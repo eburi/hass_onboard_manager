@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Onboard Manager",
+        "description": "Configure roles for your onboard roster.",
+        "data": {
+          "roles": "Roles (comma-separated, e.g., Crew, Passenger, Guest)"
+        }
+      }
+    },
+    "error": {
+      "no_roles": "You must specify at least one role."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Edit Roles",
+        "description": "Modify the available roles. Removing a role will reassign users to the first role.",
+        "data": {
+          "roles": "Roles (comma-separated)"
+        }
+      }
+    },
+    "error": {
+      "no_roles": "You must specify at least one role."
+    }
+  }
+}

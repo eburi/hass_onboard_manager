@@ -1,0 +1,6 @@
+{
+  "name": "Onboard Manager",
+  "content_in_root": false,
+  "render_readme": true,
+  "domains": ["onboard_manager"]
+}

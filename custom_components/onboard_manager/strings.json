@@ -1,0 +1,93 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Onboard Manager",
+        "description": "Configure roles for your onboard roster.",
+        "data": {
+          "roles": "Roles (comma-separated, e.g., Crew, Passenger, Guest)"
+        }
+      }
+    },
+    "error": {
+      "no_roles": "You must specify at least one role."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Edit Roles",
+        "description": "Modify the available roles. Removing a role will reassign users to the first role.",
+        "data": {
+          "roles": "Roles (comma-separated)"
+        }
+      }
+    },
+    "error": {
+      "no_roles": "You must specify at least one role."
+    }
+  },
+  "services": {
+    "set_user": {
+      "name": "Set User Settings",
+      "description": "Update onboard status, notify status, or role for a user.",
+      "fields": {
+        "user_id": {
+          "name": "User ID",
+          "description": "Home Assistant user ID."
+        },
+        "username": {
+          "name": "Username",
+          "description": "Home Assistant username (alternative to user_id)."
+        },
+        "onboard": {
+          "name": "Onboard",
+          "description": "Whether the user is onboard."
+        },
+        "notify": {
+          "name": "Notify",
+          "description": "Whether notifications are enabled for the user."
+        },
+        "role": {
+          "name": "Role",
+          "description": "User's role (slug or label)."
+        }
+      }
+    },
+    "set_user_notifiers": {
+      "name": "Set User Notifiers",
+      "description": "Manage the list of notification services for a user.",
+      "fields": {
+        "user_id": {
+          "name": "User ID",
+          "description": "Home Assistant user ID."
+        },
+        "username": {
+          "name": "Username",
+          "description": "Home Assistant username (alternative to user_id)."
+        },
+        "notifiers": {
+          "name": "Notifiers",
+          "description": "List of notification services or comma-separated string."
+        },
+        "mode": {
+          "name": "Mode",
+          "description": "How to update the notifiers list.",
+          "selector": {
+            "select": {
+              "options": ["replace", "add", "remove"]
+            }
+          }
+        }
+      }
+    },
+    "reload_users": {
+      "name": "Reload Users",
+      "description": "Force re-sync of Home Assistant users."
+    },
+    "export_state": {
+      "name": "Export State",
+      "description": "Export current roles and user states via service response."
+    }
+  }
+}

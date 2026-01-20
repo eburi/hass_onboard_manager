@@ -1,0 +1,77 @@
+set_user:
+  name: Set User Settings
+  description: Update onboard status, notify status, or role for a user.
+  fields:
+    user_id:
+      name: User ID
+      description: Home Assistant user ID.
+      example: "a1b2c3d4e5f6"
+      selector:
+        text:
+    username:
+      name: Username
+      description: Home Assistant username (alternative to user_id).
+      example: "anna"
+      selector:
+        text:
+    onboard:
+      name: Onboard
+      description: Whether the user is onboard.
+      example: true
+      selector:
+        boolean:
+    notify:
+      name: Notify
+      description: Whether notifications are enabled for the user.
+      example: true
+      selector:
+        boolean:
+    role:
+      name: Role
+      description: User's role (slug or label).
+      example: "crew"
+      selector:
+        text:
+
+set_user_notifiers:
+  name: Set User Notifiers
+  description: Manage the list of notification services for a user.
+  fields:
+    user_id:
+      name: User ID
+      description: Home Assistant user ID.
+      example: "a1b2c3d4e5f6"
+      selector:
+        text:
+    username:
+      name: Username
+      description: Home Assistant username (alternative to user_id).
+      example: "anna"
+      selector:
+        text:
+    notifiers:
+      name: Notifiers
+      description: List of notification services or comma-separated string.
+      example: ["notify.mobile_app_anna", "notify.telegram_anna"]
+      required: true
+      selector:
+        object:
+    mode:
+      name: Mode
+      description: How to update the notifiers list.
+      default: "replace"
+      example: "replace"
+      selector:
+        select:
+          options:
+            - "replace"
+            - "add"
+            - "remove"
+
+reload_users:
+  name: Reload Users
+  description: Force re-sync of Home Assistant users.
+
+export_state:
+  name: Export State
+  description: Export current roles and user states via service response.
