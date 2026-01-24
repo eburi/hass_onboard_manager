@@ -10,9 +10,10 @@ from homeassistant.components.notify import (
     ATTR_TARGET,
     ATTR_TITLE,
     NotifyEntity,
+    BaseNotificationService,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -48,6 +49,9 @@ async def async_setup_entry(
 
     async_add_entities(entities)
 
+    # Register legacy notify services for backward compatibility with Alert2 and other integrations
+    await async_setup_legacy_notify_services(hass, coordinator, config_entry, entities)
+
     # Register platform update callback to handle user/role additions/removals
     @callback
     def async_add_remove_entities() -> None:
@@ -74,26 +78,74 @@ async def async_setup_entry(
         # Add notify entities for new users
         for user_id in current_users:
             if user_id not in existing_user_ids:
-                new_entities.append(
-                    UserNotifyEntity(coordinator, config_entry, user_id)
-                )
+                new_entity = UserNotifyEntity(coordinator, config_entry, user_id)
+                new_entities.append(new_entity)
 
         # Add notify entities for new roles
         current_role_slugs = {role["slug"] for role in current_roles}
         for role_slug in current_role_slugs:
             if role_slug not in existing_role_slugs:
-                new_entities.append(
-                    RoleNotifyEntity(coordinator, config_entry, role_slug)
-                )
+                new_entity = RoleNotifyEntity(coordinator, config_entry, role_slug)
+                new_entities.append(new_entity)
 
         if new_entities:
             async_add_entities(new_entities)
             entities.extend(new_entities)
+            # Register legacy services for new entities
+            hass.async_create_task(
+                async_setup_legacy_notify_services(hass, coordinator, config_entry, new_entities)
+            )
 
     # Listen for coordinator updates
     config_entry.async_on_unload(
         coordinator.async_add_listener(async_add_remove_entities)
     )
+
+
+async def async_setup_legacy_notify_services(
+    hass: HomeAssistant,
+    coordinator: OnboardManagerCoordinator,
+    config_entry: ConfigEntry,
+    entities: list[NotifyEntity],
+) -> None:
+    """Register legacy notify services for backward compatibility."""
+    # Get the list to track registered services
+    registered_services = hass.data[DOMAIN][config_entry.entry_id].get("notify_services", [])
+    
+    for entity in entities:
+        # Determine service name from entity_id
+        if hasattr(entity, 'entity_id') and entity.entity_id:
+            # Extract service name from entity_id (remove "notify." prefix)
+            service_name = entity.entity_id.replace("notify.", "")
+        else:
+            continue
+
+        # Create a wrapper service for this notify entity
+        async def async_notify_wrapper(call: ServiceCall, entity_ref=entity) -> None:
+            """Wrapper to call notify entity's send_message method."""
+            message = call.data.get(ATTR_MESSAGE, "")
+            title = call.data.get(ATTR_TITLE)
+            
+            # Pass all additional data
+            kwargs = {}
+            if ATTR_DATA in call.data:
+                kwargs[ATTR_DATA] = call.data[ATTR_DATA]
+            if ATTR_TARGET in call.data:
+                kwargs[ATTR_TARGET] = call.data[ATTR_TARGET]
+            
+            await entity_ref.async_send_message(message, title, **kwargs)
+
+        # Register the service if it doesn't already exist
+        if not hass.services.has_service("notify", service_name):
+            hass.services.async_register(
+                "notify",
+                service_name,
+                async_notify_wrapper,
+            )
+            registered_services.append(service_name)
+            _LOGGER.debug(f"Registered legacy notify service: notify.{service_name}")
+        else:
+            _LOGGER.debug(f"Legacy notify service already exists: notify.{service_name}")
 
 
 class UserNotifyEntity(CoordinatorEntity, NotifyEntity):

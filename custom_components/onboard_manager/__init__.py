@@ -43,6 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = {
         "coordinator": coordinator,
         "storage": storage,
+        "notify_services": [],  # Track registered notify services for cleanup
     }
 
     # Set up platforms
@@ -63,6 +64,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
+        # Unregister legacy notify services created by this entry
+        entry_data = hass.data[DOMAIN].get(entry.entry_id, {})
+        notify_services = entry_data.get("notify_services", [])
+        for service_name in notify_services:
+            if hass.services.has_service("notify", service_name):
+                hass.services.async_remove("notify", service_name)
+                _LOGGER.debug(f"Unregistered legacy notify service: notify.{service_name}")
+        
         # Remove config entry data
         hass.data[DOMAIN].pop(entry.entry_id)
 
