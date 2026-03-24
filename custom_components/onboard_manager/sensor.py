@@ -1,9 +1,9 @@
 """Sensor platform for Onboard Manager."""
+
 from __future__ import annotations
 
 import json
 import logging
-from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -113,8 +113,6 @@ class OnboardUserNotifiersSensor(CoordinatorEntity, SensorEntity):
         self._attr_name = None  # Will be set in _update_attrs
 
         # Set entity_id suggestion
-        user_data = coordinator.data["users"].get(user_id, {})
-        name = user_data.get("name", "Unknown")
         self.entity_id = f"sensor.{ENTITY_PREFIX}_notifiers_{short_id}"
 
         self._update_attrs()
@@ -204,7 +202,9 @@ class OnboardActiveNotifiersRoleSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.role_slug = role_slug
         self._attr_has_entity_name = False
-        self._attr_unique_id = f"{config_entry.entry_id}_active_notifiers_role_{role_slug}"
+        self._attr_unique_id = (
+            f"{config_entry.entry_id}_active_notifiers_role_{role_slug}"
+        )
 
         # Get role label
         role_label = role_slug

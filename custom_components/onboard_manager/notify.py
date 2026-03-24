@@ -1,4 +1,5 @@
 """Notify platform for Onboard Manager."""
+
 from __future__ import annotations
 
 import logging
@@ -10,7 +11,6 @@ from homeassistant.components.notify import (
     ATTR_TARGET,
     ATTR_TITLE,
     NotifyEntity,
-    BaseNotificationService,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -93,7 +93,9 @@ async def async_setup_entry(
             entities.extend(new_entities)
             # Register legacy services for new entities
             hass.async_create_task(
-                async_setup_legacy_notify_services(hass, coordinator, config_entry, new_entities)
+                async_setup_legacy_notify_services(
+                    hass, coordinator, config_entry, new_entities
+                )
             )
 
     # Listen for coordinator updates
@@ -110,11 +112,13 @@ async def async_setup_legacy_notify_services(
 ) -> None:
     """Register legacy notify services for backward compatibility."""
     # Get the list to track registered services
-    registered_services = hass.data[DOMAIN][config_entry.entry_id].get("notify_services", [])
-    
+    registered_services = hass.data[DOMAIN][config_entry.entry_id].get(
+        "notify_services", []
+    )
+
     for entity in entities:
         # Determine service name from entity_id
-        if hasattr(entity, 'entity_id') and entity.entity_id:
+        if hasattr(entity, "entity_id") and entity.entity_id:
             # Extract service name from entity_id (remove "notify." prefix)
             service_name = entity.entity_id.replace("notify.", "")
         else:
@@ -125,14 +129,14 @@ async def async_setup_legacy_notify_services(
             """Wrapper to call notify entity's send_message method."""
             message = call.data.get(ATTR_MESSAGE, "")
             title = call.data.get(ATTR_TITLE)
-            
+
             # Pass all additional data
             kwargs = {}
             if ATTR_DATA in call.data:
                 kwargs[ATTR_DATA] = call.data[ATTR_DATA]
             if ATTR_TARGET in call.data:
                 kwargs[ATTR_TARGET] = call.data[ATTR_TARGET]
-            
+
             await entity_ref.async_send_message(message, title, **kwargs)
 
         # Register the service if it doesn't already exist
@@ -145,7 +149,9 @@ async def async_setup_legacy_notify_services(
             registered_services.append(service_name)
             _LOGGER.debug(f"Registered legacy notify service: notify.{service_name}")
         else:
-            _LOGGER.debug(f"Legacy notify service already exists: notify.{service_name}")
+            _LOGGER.debug(
+                f"Legacy notify service already exists: notify.{service_name}"
+            )
 
 
 class UserNotifyEntity(CoordinatorEntity, NotifyEntity):
@@ -192,7 +198,9 @@ class UserNotifyEntity(CoordinatorEntity, NotifyEntity):
         self._attr_available = user_data.get("notify", True)
         self._attr_name = f"Onboard Manager: {name}"
 
-    async def async_send_message(self, message: str, title: str | None = None, **kwargs: Any) -> None:
+    async def async_send_message(
+        self, message: str, title: str | None = None, **kwargs: Any
+    ) -> None:
         """Send a message to all user's notifiers."""
         user_data = self.coordinator.data["users"].get(self.user_id, {})
 
@@ -202,12 +210,16 @@ class UserNotifyEntity(CoordinatorEntity, NotifyEntity):
 
         # Check if notify is enabled
         if not user_data.get("notify", True):
-            _LOGGER.debug(f"Notifications disabled for user {user_data.get('name', self.user_id)}")
+            _LOGGER.debug(
+                f"Notifications disabled for user {user_data.get('name', self.user_id)}"
+            )
             return
 
         notifiers = user_data.get("notifiers", [])
         if not notifiers:
-            _LOGGER.debug(f"No notifiers configured for user {user_data.get('name', self.user_id)}")
+            _LOGGER.debug(
+                f"No notifiers configured for user {user_data.get('name', self.user_id)}"
+            )
             return
 
         # Build service data
@@ -259,7 +271,9 @@ class AllActiveNotifyEntity(CoordinatorEntity, NotifyEntity):
         self._attr_name = "Onboard Manager: All Active"
         self.entity_id = f"notify.{ENTITY_PREFIX}_all"
 
-    async def async_send_message(self, message: str, title: str | None = None, **kwargs: Any) -> None:
+    async def async_send_message(
+        self, message: str, title: str | None = None, **kwargs: Any
+    ) -> None:
         """Send a message to all active users' notifiers."""
         notifiers = self.coordinator.data.get("active_notifiers_all", [])
 
@@ -335,7 +349,9 @@ class RoleNotifyEntity(CoordinatorEntity, NotifyEntity):
 
         super()._handle_coordinator_update()
 
-    async def async_send_message(self, message: str, title: str | None = None, **kwargs: Any) -> None:
+    async def async_send_message(
+        self, message: str, title: str | None = None, **kwargs: Any
+    ) -> None:
         """Send a message to all active users in this role."""
         active_by_role = self.coordinator.data.get("active_notifiers_by_role", {})
         notifiers = active_by_role.get(self.role_slug, [])

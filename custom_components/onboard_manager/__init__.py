@@ -1,4 +1,5 @@
 """The Onboard Manager integration."""
+
 from __future__ import annotations
 
 import logging
@@ -70,8 +71,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for service_name in notify_services:
             if hass.services.has_service("notify", service_name):
                 hass.services.async_remove("notify", service_name)
-                _LOGGER.debug(f"Unregistered legacy notify service: notify.{service_name}")
-        
+                _LOGGER.debug(
+                    f"Unregistered legacy notify service: notify.{service_name}"
+                )
+
         # Remove config entry data
         hass.data[DOMAIN].pop(entry.entry_id)
 

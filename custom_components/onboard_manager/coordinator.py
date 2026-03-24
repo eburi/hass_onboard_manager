@@ -1,4 +1,5 @@
 """Coordinator for Onboard Manager."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -45,9 +46,7 @@ class OnboardManagerCoordinator(DataUpdateCoordinator):
             users = data.get("users", {})
 
             # Sync users with Home Assistant
-            updated_users, removed_user_ids = await sync_users(
-                self.hass, users, roles
-            )
+            updated_users, removed_user_ids = await sync_users(self.hass, users, roles)
 
             # Update storage with synced users
             if removed_user_ids or updated_users != users:
@@ -87,7 +86,6 @@ class OnboardManagerCoordinator(DataUpdateCoordinator):
     async def async_update_roles(self, roles: list[dict[str, str]]) -> None:
         """Update roles and reassign users if needed."""
         data = self.storage.get_data()
-        old_roles = data.get("roles", [])
         users = data.get("users", {})
 
         # Get valid role slugs

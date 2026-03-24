@@ -1,4 +1,5 @@
 """User registry and sync for Onboard Manager."""
+
 from __future__ import annotations
 
 import logging
@@ -94,7 +95,9 @@ async def sync_users(
     for stored_user_id in storage_users:
         if stored_user_id not in ha_user_ids:
             removed_user_ids.add(stored_user_id)
-            _LOGGER.info(f"Removing user {storage_users[stored_user_id].get('name', stored_user_id)}")
+            _LOGGER.info(
+                f"Removing user {storage_users[stored_user_id].get('name', stored_user_id)}"
+            )
 
     return updated_users, removed_user_ids
 

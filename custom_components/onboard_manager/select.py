@@ -1,8 +1,8 @@
 """Select platform for Onboard Manager."""
+
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
@@ -43,9 +43,7 @@ async def async_setup_entry(
 
         # Get existing entity user IDs
         existing_user_ids = {
-            entity.user_id
-            for entity in entities
-            if isinstance(entity, RoleSelect)
+            entity.user_id for entity in entities if isinstance(entity, RoleSelect)
         }
 
         new_entities = []

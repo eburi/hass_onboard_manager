@@ -1,4 +1,5 @@
 """Switch platform for Onboard Manager."""
+
 from __future__ import annotations
 
 import logging
@@ -44,9 +45,7 @@ async def async_setup_entry(
 
         # Get existing entity user IDs
         existing_user_ids = {
-            entity.user_id
-            for entity in entities
-            if hasattr(entity, "user_id")
+            entity.user_id for entity in entities if hasattr(entity, "user_id")
         }
 
         new_entities = []

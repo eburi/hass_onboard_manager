@@ -1,4 +1,5 @@
 """Storage management for Onboard Manager."""
+
 from __future__ import annotations
 
 import logging

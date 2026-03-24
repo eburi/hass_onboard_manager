@@ -1,12 +1,17 @@
 """Services for Onboard Manager."""
+
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -54,7 +59,9 @@ SERVICE_LIST_NOTIFIERS_SCHEMA = vol.Schema(
 )
 
 
-def register_services(hass: HomeAssistant, coordinator: OnboardManagerCoordinator) -> None:
+def register_services(
+    hass: HomeAssistant, coordinator: OnboardManagerCoordinator
+) -> None:
     """Register services for onboard manager."""
 
     async def handle_set_user(call: ServiceCall) -> None:
@@ -149,9 +156,7 @@ def register_services(hass: HomeAssistant, coordinator: OnboardManagerCoordinato
                     updated_notifiers.append(notifier)
         elif mode == NOTIFIER_MODE_REMOVE:
             # Remove specified notifiers
-            updated_notifiers = [
-                n for n in current_notifiers if n not in new_notifiers
-            ]
+            updated_notifiers = [n for n in current_notifiers if n not in new_notifiers]
         else:
             _LOGGER.error(f"Invalid mode: {mode}")
             return
@@ -195,10 +200,7 @@ def register_services(hass: HomeAssistant, coordinator: OnboardManagerCoordinato
             # However, notify services don't always have entities, so we
             # do a simple substring match on the service name.
             filter_lower = domain_filter.lower().replace(".", "_")
-            notifiers = [
-                n for n in notifiers
-                if filter_lower in n["service"].lower()
-            ]
+            notifiers = [n for n in notifiers if filter_lower in n["service"].lower()]
 
         return {
             "notifiers": notifiers,
