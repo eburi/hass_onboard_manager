@@ -15,6 +15,7 @@ from .const import (
     NOTIFIER_MODE_REMOVE,
     NOTIFIER_MODE_REPLACE,
     SERVICE_EXPORT_STATE,
+    SERVICE_LIST_NOTIFIERS,
     SERVICE_RELOAD_USERS,
     SERVICE_SET_USER,
     SERVICE_SET_USER_NOTIFIERS,
@@ -43,6 +44,12 @@ SERVICE_SET_USER_NOTIFIERS_SCHEMA = vol.Schema(
         vol.Optional("mode", default=NOTIFIER_MODE_REPLACE): vol.In(
             [NOTIFIER_MODE_REPLACE, NOTIFIER_MODE_ADD, NOTIFIER_MODE_REMOVE]
         ),
+    }
+)
+
+SERVICE_LIST_NOTIFIERS_SCHEMA = vol.Schema(
+    {
+        vol.Optional("domain_filter"): cv.string,
     }
 )
 
@@ -167,6 +174,37 @@ def register_services(hass: HomeAssistant, coordinator: OnboardManagerCoordinato
             "active_notifiers_by_role": data.get("active_notifiers_by_role", {}),
         }
 
+    async def handle_list_notifiers(call: ServiceCall) -> ServiceResponse:
+        """Handle list_notifiers service call.
+
+        Discovers all available notify services registered in Home Assistant,
+        optionally filtered by integration domain (e.g. 'mobile_app').
+        """
+        domain_filter = call.data.get("domain_filter")
+        notify_services = hass.services.async_services().get("notify", {})
+
+        notifiers: list[dict[str, str]] = []
+        for service_name in sorted(notify_services):
+            full_name = f"notify.{service_name}"
+            notifiers.append({"service": full_name})
+
+        if domain_filter:
+            # Filter by integration domain using the entity registry approach:
+            # look for device_tracker entities from the integration, then derive
+            # the notify service name from the device name.
+            # However, notify services don't always have entities, so we
+            # do a simple substring match on the service name.
+            filter_lower = domain_filter.lower().replace(".", "_")
+            notifiers = [
+                n for n in notifiers
+                if filter_lower in n["service"].lower()
+            ]
+
+        return {
+            "notifiers": notifiers,
+            "count": len(notifiers),
+        }
+
     # Register services
     hass.services.async_register(
         DOMAIN,
@@ -195,6 +233,14 @@ def register_services(hass: HomeAssistant, coordinator: OnboardManagerCoordinato
         supports_response=SupportsResponse.ONLY,
     )
 
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_LIST_NOTIFIERS,
+        handle_list_notifiers,
+        schema=SERVICE_LIST_NOTIFIERS_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+
 
 def unregister_services(hass: HomeAssistant) -> None:
     """Unregister services for onboard manager."""
@@ -202,3 +248,4 @@ def unregister_services(hass: HomeAssistant) -> None:
     hass.services.async_remove(DOMAIN, SERVICE_SET_USER_NOTIFIERS)
     hass.services.async_remove(DOMAIN, SERVICE_RELOAD_USERS)
     hass.services.async_remove(DOMAIN, SERVICE_EXPORT_STATE)
+    hass.services.async_remove(DOMAIN, SERVICE_LIST_NOTIFIERS)

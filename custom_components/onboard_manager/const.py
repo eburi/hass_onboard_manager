@@ -22,6 +22,7 @@ SERVICE_SET_USER = "set_user"
 SERVICE_SET_USER_NOTIFIERS = "set_user_notifiers"
 SERVICE_RELOAD_USERS = "reload_users"
 SERVICE_EXPORT_STATE = "export_state"
+SERVICE_LIST_NOTIFIERS = "list_notifiers"
 
 # Notifier modes
 NOTIFIER_MODE_REPLACE = "replace"

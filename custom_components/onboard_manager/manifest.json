@@ -6,5 +6,5 @@
   "documentation": "https://github.com/eburi/hass_onboard_manager",
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/eburi/hass_onboard_manager/issues",
-  "version": "1.0.0"
+  "version": "1.1.0"
 }

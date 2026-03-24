@@ -1,0 +1,19 @@
+{
+  "services": {
+    "set_user": {
+      "service": "mdi:account-cog"
+    },
+    "set_user_notifiers": {
+      "service": "mdi:bell-cog"
+    },
+    "reload_users": {
+      "service": "mdi:account-sync"
+    },
+    "export_state": {
+      "service": "mdi:database-export"
+    },
+    "list_notifiers": {
+      "service": "mdi:bell-ring-outline"
+    }
+  }
+}

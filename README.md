@@ -1,5 +1,12 @@
 # Onboard Manager for Home Assistant
 
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
+[![Tests](https://github.com/eburi/hass_onboard_manager/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/eburi/hass_onboard_manager/actions/workflows/tests.yml)
+[![Linting](https://github.com/eburi/hass_onboard_manager/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/eburi/hass_onboard_manager/actions/workflows/lint.yml)
+[![codecov](https://codecov.io/gh/eburi/hass_onboard_manager/branch/main/graph/badge.svg)](https://codecov.io/gh/eburi/hass_onboard_manager)
+[![Latest Release](https://img.shields.io/github/v/release/eburi/hass_onboard_manager)](https://github.com/eburi/hass_onboard_manager/releases/latest)
+[![Open your Home Assistant instance and open the add repository dialog with a specific repository URL pre-filled](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=eburi&repository=hass_onboard_manager&category=integration)
+
 A Home Assistant custom integration that manages an "onboard roster" keyed by HA Users and automatically keeps entities and notification groups in sync as users are added/removed.
 
 ## Features
@@ -10,6 +17,13 @@ A Home Assistant custom integration that manages an "onboard roster" keyed by HA
 - **Notification Groups**: Creates `notify.*` services for users, roles, and all active users
 - **Persistent Storage**: All data persists via integration storage (no YAML helpers needed)
 - **Role Management**: Define custom roles with easy configuration
+
+## HACS Status
+
+- Repository type: HACS Integration (Custom Repository)
+- Installation mode: repository-based (`zip_release: false`)
+- Add directly in HACS via the one-click badge above or by URL:
+  - `https://github.com/eburi/hass_onboard_manager`
 
 ## Installation
 
@@ -22,7 +36,13 @@ A Home Assistant custom integration that manages an "onboard roster" keyed by HA
 
 ### HACS Installation
 
-_(Coming soon)_
+1. Open HACS in Home Assistant
+2. Click on "Integrations"
+3. Click the three dots in the top right and select "Custom repositories"
+4. Add `https://github.com/eburi/hass_onboard_manager` as an Integration
+5. Search for "Onboard Manager"
+6. Click Install
+7. Restart Home Assistant
 
 ## Configuration
 
@@ -147,6 +167,40 @@ Export current state via service response (for debugging).
 ```yaml
 service: onboard_manager.export_state
 response_variable: state
+```
+
+### `onboard_manager.list_notifiers`
+
+List all available notification services registered in Home Assistant.
+Returns response data, making it easy to discover which `notify.*` services
+can be passed to `set_user_notifiers`.
+
+**Fields:**
+- `domain_filter` (optional): Filter results by keyword (e.g. `mobile_app`)
+
+**Example (all notifiers):**
+```yaml
+service: onboard_manager.list_notifiers
+response_variable: result
+```
+
+**Example (only mobile app notifiers):**
+```yaml
+service: onboard_manager.list_notifiers
+data:
+  domain_filter: mobile_app
+response_variable: result
+```
+
+**Response:**
+```json
+{
+  "notifiers": [
+    {"service": "notify.mobile_app_anna"},
+    {"service": "notify.mobile_app_bob"}
+  ],
+  "count": 2
+}
 ```
 
 ## Usage Examples

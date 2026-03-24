@@ -26,5 +26,73 @@
     "error": {
       "no_roles": "You must specify at least one role."
     }
+  },
+  "services": {
+    "set_user": {
+      "name": "Set user settings",
+      "description": "Update onboard status, notification preference, or role for a user.",
+      "fields": {
+        "user_id": {
+          "name": "User ID",
+          "description": "The Home Assistant internal user ID."
+        },
+        "username": {
+          "name": "Username",
+          "description": "The Home Assistant username (alternative to User ID)."
+        },
+        "onboard": {
+          "name": "Onboard",
+          "description": "Set whether the user is currently onboard."
+        },
+        "notify": {
+          "name": "Notify",
+          "description": "Set whether the user receives notifications."
+        },
+        "role": {
+          "name": "Role",
+          "description": "Assign a role to the user (slug or label, e.g. 'crew')."
+        }
+      }
+    },
+    "set_user_notifiers": {
+      "name": "Set user notifiers",
+      "description": "Add, remove, or replace the list of notification services for a user. Use the 'List notifiers' action to discover available services.",
+      "fields": {
+        "user_id": {
+          "name": "User ID",
+          "description": "The Home Assistant internal user ID."
+        },
+        "username": {
+          "name": "Username",
+          "description": "The Home Assistant username (alternative to User ID)."
+        },
+        "notifiers": {
+          "name": "Notifiers",
+          "description": "Notification services to assign. A list or comma-separated string (e.g. 'notify.mobile_app_anna, notify.telegram_anna')."
+        },
+        "mode": {
+          "name": "Mode",
+          "description": "How to update the list: 'replace' overwrites, 'add' appends new entries, 'remove' deletes entries."
+        }
+      }
+    },
+    "reload_users": {
+      "name": "Reload users",
+      "description": "Force a re-sync of all Home Assistant users into the onboard roster."
+    },
+    "export_state": {
+      "name": "Export state",
+      "description": "Return the current roles, users, and active notifiers as response data (for debugging)."
+    },
+    "list_notifiers": {
+      "name": "List notifiers",
+      "description": "List all available notification services registered in Home Assistant. Useful for discovering which services can be assigned to users.",
+      "fields": {
+        "domain_filter": {
+          "name": "Domain filter",
+          "description": "Optional filter to narrow results (e.g. 'mobile_app' to show only mobile app notifiers)."
+        }
+      }
+    }
   }
 }
