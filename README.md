@@ -5,6 +5,8 @@
 [![Linting](https://github.com/eburi/hass_onboard_manager/actions/workflows/lint.yml/badge.svg?branch=main)](https://github.com/eburi/hass_onboard_manager/actions/workflows/lint.yml)
 [![codecov](https://codecov.io/gh/eburi/hass_onboard_manager/branch/main/graph/badge.svg)](https://codecov.io/gh/eburi/hass_onboard_manager)
 [![Latest Release](https://img.shields.io/github/v/release/eburi/hass_onboard_manager)](https://github.com/eburi/hass_onboard_manager/releases/latest)
+
+
 [![Open your Home Assistant instance and open the add repository dialog with a specific repository URL pre-filled](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=eburi&repository=hass_onboard_manager&category=integration)
 
 A Home Assistant custom integration that manages an "onboard roster" keyed by HA Users and automatically keeps entities and notification groups in sync as users are added/removed.
