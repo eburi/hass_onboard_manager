@@ -135,6 +135,8 @@ class OnboardUserNotifiersSensor(CoordinatorEntity, SensorEntity):
         self._attr_available = True
         name = user_data.get("name", "Unknown")
         notifiers = user_data.get("notifiers", [])
+        manual_notifiers = user_data.get("manual_notifiers", [])
+        auto_notifiers = user_data.get("auto_notifiers", [])
 
         # Set friendly name
         self._attr_name = f"{name} Notifiers"
@@ -145,6 +147,8 @@ class OnboardUserNotifiersSensor(CoordinatorEntity, SensorEntity):
         # Attributes
         self._attr_extra_state_attributes = {
             "notifiers": notifiers,
+            "manual_notifiers": manual_notifiers,
+            "auto_notifiers": auto_notifiers,
             "user_id": self.user_id,
             "name": name,
             "role": user_data.get("role", ""),

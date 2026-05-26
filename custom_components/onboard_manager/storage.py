@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from .const import STORAGE_KEY, STORAGE_VERSION
+from .user_registry import normalize_user_record, normalize_users
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +28,10 @@ class OnboardStorage:
         data = await self._store.async_load()
         if data is None:
             data = {"roles": [], "users": {}}
-        self._data = data
+        self._data = {
+            "roles": data.get("roles", []),
+            "users": normalize_users(data.get("users", {})),
+        }
         return self._data
 
     async def async_save(self) -> None:
@@ -40,7 +44,10 @@ class OnboardStorage:
 
     def update_data(self, data: dict[str, Any]) -> None:
         """Update data."""
-        self._data = data
+        self._data = {
+            "roles": data.get("roles", []),
+            "users": normalize_users(data.get("users", {})),
+        }
 
     def get_roles(self) -> list[dict[str, str]]:
         """Get configured roles."""
@@ -62,7 +69,7 @@ class OnboardStorage:
         """Set user data."""
         if "users" not in self._data:
             self._data["users"] = {}
-        self._data["users"][user_id] = user_data
+        self._data["users"][user_id] = normalize_user_record(user_data)
 
     def delete_user(self, user_id: str) -> None:
         """Delete a user."""
@@ -73,6 +80,6 @@ class OnboardStorage:
         """Update specific fields of a user."""
         if "users" not in self._data:
             self._data["users"] = {}
-        if user_id not in self._data["users"]:
-            self._data["users"][user_id] = {}
-        self._data["users"][user_id].update(updates)
+        user_data = normalize_user_record(self._data["users"].get(user_id, {}))
+        user_data.update(updates)
+        self._data["users"][user_id] = normalize_user_record(user_data)

@@ -20,11 +20,26 @@ async def test_storage_load_empty(hass: HomeAssistant) -> None:
 
 async def test_storage_load_existing(hass: HomeAssistant) -> None:
     """Test loading existing data from storage."""
-    existing = {"roles": [{"label": "Crew", "slug": "crew"}], "users": {"u1": {}}}
+    existing = {
+        "roles": [{"label": "Crew", "slug": "crew"}],
+        "users": {
+            "u1": {
+                "name": "Alice",
+                "notifiers": ["notify.telegram_alice", "notify.mobile_app_alice"],
+                "auto_notifiers": ["notify.mobile_app_alice"],
+            }
+        },
+    }
     storage = OnboardStorage(hass)
     with patch.object(storage._store, "async_load", return_value=existing):
         data = await storage.async_load()
-    assert data == existing
+    assert data["roles"] == existing["roles"]
+    assert data["users"]["u1"]["manual_notifiers"] == ["notify.telegram_alice"]
+    assert data["users"]["u1"]["auto_notifiers"] == ["notify.mobile_app_alice"]
+    assert data["users"]["u1"]["notifiers"] == [
+        "notify.telegram_alice",
+        "notify.mobile_app_alice",
+    ]
 
 
 async def test_storage_save(hass: HomeAssistant) -> None:
@@ -65,12 +80,33 @@ def test_storage_user_operations(hass: HomeAssistant) -> None:
 
     # Set user
     storage.set_user("u1", {"name": "Alice", "onboard": True})
-    assert storage.get_user("u1") == {"name": "Alice", "onboard": True}
-    assert storage.get_users() == {"u1": {"name": "Alice", "onboard": True}}
+    assert storage.get_user("u1") == {
+        "name": "Alice",
+        "onboard": True,
+        "manual_notifiers": [],
+        "auto_notifiers": [],
+        "notifiers": [],
+    }
+    assert storage.get_users() == {
+        "u1": {
+            "name": "Alice",
+            "onboard": True,
+            "manual_notifiers": [],
+            "auto_notifiers": [],
+            "notifiers": [],
+        }
+    }
 
     # Update user
     storage.update_user("u1", {"notify": True})
-    assert storage.get_user("u1") == {"name": "Alice", "onboard": True, "notify": True}
+    assert storage.get_user("u1") == {
+        "name": "Alice",
+        "onboard": True,
+        "notify": True,
+        "manual_notifiers": [],
+        "auto_notifiers": [],
+        "notifiers": [],
+    }
 
     # Delete user
     storage.delete_user("u1")
@@ -84,4 +120,9 @@ def test_storage_update_nonexistent_user(hass: HomeAssistant) -> None:
     """Test updating a user that doesn't exist yet creates the record."""
     storage = OnboardStorage(hass)
     storage.update_user("u99", {"name": "New"})
-    assert storage.get_user("u99") == {"name": "New"}
+    assert storage.get_user("u99") == {
+        "name": "New",
+        "manual_notifiers": [],
+        "auto_notifiers": [],
+        "notifiers": [],
+    }

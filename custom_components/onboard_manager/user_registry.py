@@ -7,10 +7,16 @@ from typing import Any
 
 from homeassistant.auth.models import User
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .const import DEFAULT_NOTIFY, DEFAULT_NOTIFIERS, DEFAULT_ONBOARD
 
 _LOGGER = logging.getLogger(__name__)
+
+MOBILE_APP_DOMAIN = "mobile_app"
+MOBILE_APP_DATA_CONFIG_ENTRIES = "config_entries"
+MOBILE_APP_DATA_DEVICES = "devices"
+MOBILE_APP_DATA_NOTIFY = "notify"
 
 
 def get_short_id(user_id: str) -> str:
@@ -41,11 +47,137 @@ def parse_notifiers_input(notifiers: Any) -> list[str]:
     return [normalize_notifier(n) for n in notifier_list]
 
 
+def deduplicate_notifiers(notifiers: list[str]) -> list[str]:
+    """Deduplicate notifiers while preserving order."""
+    deduplicated: list[str] = []
+    seen: set[str] = set()
+
+    for notifier in parse_notifiers_input(notifiers):
+        if notifier in seen:
+            continue
+        deduplicated.append(notifier)
+        seen.add(notifier)
+
+    return deduplicated
+
+
+def get_auto_notifiers(user_data: dict[str, Any]) -> list[str]:
+    """Return automatically discovered notifiers for a user."""
+    return deduplicate_notifiers(user_data.get("auto_notifiers", []))
+
+
+def get_manual_notifiers(user_data: dict[str, Any]) -> list[str]:
+    """Return manually configured notifiers for a user."""
+    if "manual_notifiers" in user_data:
+        return deduplicate_notifiers(user_data.get("manual_notifiers", []))
+
+    auto_notifiers = set(get_auto_notifiers(user_data))
+    return [
+        notifier
+        for notifier in deduplicate_notifiers(user_data.get("notifiers", []))
+        if notifier not in auto_notifiers
+    ]
+
+
+def merge_notifiers(
+    manual_notifiers: list[str], auto_notifiers: list[str]
+) -> list[str]:
+    """Merge manual and automatic notifiers."""
+    return deduplicate_notifiers([*manual_notifiers, *auto_notifiers])
+
+
+def normalize_user_record(user_data: dict[str, Any]) -> dict[str, Any]:
+    """Normalize user notifier fields for storage and coordinator state."""
+    normalized = user_data.copy()
+    manual_notifiers = get_manual_notifiers(normalized)
+    auto_notifiers = get_auto_notifiers(normalized)
+
+    normalized["manual_notifiers"] = manual_notifiers
+    normalized["auto_notifiers"] = auto_notifiers
+    normalized["notifiers"] = merge_notifiers(manual_notifiers, auto_notifiers)
+
+    return normalized
+
+
+def normalize_users(users: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Normalize all stored users."""
+    return {
+        user_id: normalize_user_record(user_data)
+        for user_id, user_data in users.items()
+    }
+
+
+def get_mobile_app_notify_service(hass: HomeAssistant, webhook_id: str) -> str | None:
+    """Return the notify service name for a mobile_app webhook."""
+    mobile_app_data = hass.data.get(MOBILE_APP_DOMAIN, {})
+    notify_service = mobile_app_data.get(MOBILE_APP_DATA_NOTIFY)
+    if notify_service is None:
+        return None
+
+    for target_service, target_webhook_id in notify_service.registered_targets.items():
+        if target_webhook_id == webhook_id:
+            return target_service
+
+    return None
+
+
 async def get_ha_users(hass: HomeAssistant) -> list[User]:
     """Get all human Home Assistant users."""
     users = await hass.auth.async_get_users()
     # Filter out system users and get only human users
     return [user for user in users if not user.system_generated and user.is_active]
+
+
+def get_user_device_notifiers(hass: HomeAssistant, user_id: str) -> list[str]:
+    """Resolve notify services from a user's person-linked devices."""
+    mobile_app_data = hass.data.get(MOBILE_APP_DOMAIN)
+    if (
+        not mobile_app_data
+        or MOBILE_APP_DATA_NOTIFY not in mobile_app_data
+        or MOBILE_APP_DATA_DEVICES not in mobile_app_data
+    ):
+        return []
+
+    entity_registry = er.async_get(hass)
+
+    tracker_device_ids: list[str] = []
+    seen_device_ids: set[str] = set()
+    for person_state in hass.states.async_all("person"):
+        if person_state.attributes.get("user_id") != user_id:
+            continue
+
+        for entity_id in person_state.attributes.get("device_trackers", []):
+            if (
+                not (entry := entity_registry.async_get(entity_id))
+                or not entry.device_id
+            ):
+                continue
+            if entry.device_id in seen_device_ids:
+                continue
+            tracker_device_ids.append(entry.device_id)
+            seen_device_ids.add(entry.device_id)
+
+    if not tracker_device_ids:
+        return []
+
+    device_to_webhook_id = {
+        device.id: webhook_id
+        for webhook_id, device in mobile_app_data[MOBILE_APP_DATA_DEVICES].items()
+    }
+
+    notifiers: list[str] = []
+    for device_id in tracker_device_ids:
+        webhook_id = device_to_webhook_id.get(device_id)
+        if not webhook_id:
+            continue
+
+        if webhook_id not in mobile_app_data.get(MOBILE_APP_DATA_CONFIG_ENTRIES, {}):
+            continue
+
+        if service_name := get_mobile_app_notify_service(hass, webhook_id):
+            notifiers.append(normalize_notifier(service_name))
+
+    return deduplicate_notifiers(notifiers)
 
 
 async def sync_users(
@@ -75,7 +207,7 @@ async def sync_users(
 
         if user_id in storage_users:
             # Existing user - update name if changed
-            user_data = storage_users[user_id].copy()
+            user_data = normalize_user_record(storage_users[user_id])
             user_data["name"] = user_name
         else:
             # New user - create default record
@@ -87,7 +219,16 @@ async def sync_users(
                 "notify": DEFAULT_NOTIFY,
                 "role": default_role,
                 "notifiers": DEFAULT_NOTIFIERS.copy(),
+                "manual_notifiers": DEFAULT_NOTIFIERS.copy(),
+                "auto_notifiers": [],
             }
+
+        auto_notifiers = get_user_device_notifiers(hass, user_id)
+        user_data["auto_notifiers"] = auto_notifiers
+        user_data["manual_notifiers"] = get_manual_notifiers(user_data)
+        user_data["notifiers"] = merge_notifiers(
+            user_data["manual_notifiers"], auto_notifiers
+        )
 
         updated_users[user_id] = user_data
 

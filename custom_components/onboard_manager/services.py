@@ -26,7 +26,13 @@ from .const import (
     SERVICE_SET_USER_NOTIFIERS,
 )
 from .coordinator import OnboardManagerCoordinator
-from .user_registry import parse_notifiers_input, resolve_user_id
+from .user_registry import (
+    get_auto_notifiers,
+    get_manual_notifiers,
+    merge_notifiers,
+    parse_notifiers_input,
+    resolve_user_id,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -139,7 +145,8 @@ def register_services(
             return
 
         user_data = users[user_id]
-        current_notifiers = user_data.get("notifiers", [])
+        current_manual_notifiers = get_manual_notifiers(user_data)
+        auto_notifiers = get_auto_notifiers(user_data)
 
         # Parse new notifiers
         new_notifiers = parse_notifiers_input(call.data["notifiers"])
@@ -147,21 +154,32 @@ def register_services(
 
         # Apply mode
         if mode == NOTIFIER_MODE_REPLACE:
-            updated_notifiers = new_notifiers
+            updated_manual_notifiers = new_notifiers
         elif mode == NOTIFIER_MODE_ADD:
             # Add new notifiers that aren't already present
-            updated_notifiers = current_notifiers.copy()
+            updated_manual_notifiers = current_manual_notifiers.copy()
             for notifier in new_notifiers:
-                if notifier not in updated_notifiers:
-                    updated_notifiers.append(notifier)
+                if notifier not in updated_manual_notifiers:
+                    updated_manual_notifiers.append(notifier)
         elif mode == NOTIFIER_MODE_REMOVE:
             # Remove specified notifiers
-            updated_notifiers = [n for n in current_notifiers if n not in new_notifiers]
+            updated_manual_notifiers = [
+                notifier
+                for notifier in current_manual_notifiers
+                if notifier not in new_notifiers
+            ]
         else:
             _LOGGER.error(f"Invalid mode: {mode}")
             return
 
-        await coordinator.async_update_user(user_id, {"notifiers": updated_notifiers})
+        updated_notifiers = merge_notifiers(updated_manual_notifiers, auto_notifiers)
+        await coordinator.async_update_user(
+            user_id,
+            {
+                "manual_notifiers": updated_manual_notifiers,
+                "notifiers": updated_notifiers,
+            },
+        )
         _LOGGER.info(f"Updated notifiers for user {user_id}: {updated_notifiers}")
 
     async def handle_reload_users(call: ServiceCall) -> None:

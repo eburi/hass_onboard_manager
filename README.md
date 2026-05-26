@@ -14,6 +14,7 @@ A Home Assistant custom integration that manages an "onboard roster" keyed by HA
 ## Features
 
 - **Automatic User Discovery**: Automatically discovers and syncs Home Assistant users
+- **Automatic Device Notifier Sync**: Discovers `notify.mobile_app_*` services from the devices linked to each user's Home Assistant person
 - **Per-User Control Entities**: Creates onboard/notify switches, role selector, and notifiers sensor for each user
 - **Aggregate Sensors**: Provides sensors listing active notifiers for all users or by role
 - **Notification Groups**: Creates `notify.*` services for users, roles, and all active users
@@ -115,7 +116,9 @@ data:
 
 ### `onboard_manager.set_user_notifiers`
 
-Manage user's notification services.
+Manage a user's manual notification services.
+
+Device-linked `mobile_app` notifiers are synced automatically from the user's Home Assistant person and are merged with these manual notifiers.
 
 **Fields:**
 - `user_id` (optional): Home Assistant user ID
@@ -330,7 +333,9 @@ Data is stored in `.storage/onboard_manager`:
       "onboard": true,
       "notify": true,
       "role": "crew",
-      "notifiers": ["notify.mobile_app_anna", "notify.telegram_anna"]
+      "manual_notifiers": ["notify.telegram_anna"],
+      "auto_notifiers": ["notify.mobile_app_anna_phone"],
+      "notifiers": ["notify.telegram_anna", "notify.mobile_app_anna_phone"]
     }
   }
 }
@@ -342,7 +347,9 @@ When a new Home Assistant user is detected:
 - `onboard`: `false`
 - `notify`: `true`
 - `role`: First configured role
-- `notifiers`: `[]` (empty list)
+- `manual_notifiers`: `[]` (empty list)
+- `auto_notifiers`: Auto-discovered from the user's linked devices
+- `notifiers`: Combined manual + auto notifier list
 
 ## Behavior Details
 
@@ -354,6 +361,8 @@ The integration syncs with Home Assistant users:
 - **When `reload_users` service is called**
 
 When users are removed from Home Assistant, their entities are automatically removed.
+
+For users linked to a Home Assistant `person`, the integration also follows that person's `device_trackers`, resolves the underlying devices, and automatically adds any matching `mobile_app` notify services to the user.
 
 ### Active Notifiers
 
