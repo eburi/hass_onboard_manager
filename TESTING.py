@@ -23,12 +23,12 @@ Expected:
 """
 After setup, verify entities exist for each HA user:
 
-For each user (replace <shortid> with first 8 chars of user_id):
-- switch.onboard_manager_onboard_<shortid>
-- switch.onboard_manager_notify_<shortid>
-- select.onboard_manager_role_<shortid>
-- sensor.onboard_manager_notifiers_<shortid>
-- notify.onboard_manager_user_<shortid>
+For each user (replace <username_slug> with the user's slugified name):
+- switch.onboard_manager_onboard_<username_slug>
+- switch.onboard_manager_notify_<username_slug>
+- select.onboard_manager_role_<username_slug>
+- sensor.onboard_manager_notifiers_<username_slug>
+- notify.onboard_manager_user_<username_slug>
 
 Aggregate entities:
 - notify.onboard_manager_all
@@ -53,7 +53,7 @@ data:
     - notify.telegram_anna
 
 Expected:
-- sensor.onboard_manager_notifiers_<shortid> state updates to show list
+- sensor.onboard_manager_notifiers_<username_slug> state updates to show list
 - No errors in logs
 """
 
@@ -61,7 +61,7 @@ Expected:
 """
 Call service to send notification to specific user:
 
-service: notify.onboard_manager_user_<shortid>
+service: notify.onboard_manager_user_<username_slug>
 data:
   message: "Test message for Anna"
   title: "Test"
@@ -232,7 +232,7 @@ IMPLEMENTATION_CHECKLIST = {
     ],
     "User Registry": [
         "✓ user_registry.py with sync logic",
-        "✓ get_short_id() for stable entity suffixes",
+        "✓ slugify_identifier() for readable entity ids",
         "✓ normalize_notifier() ensures notify. prefix",
         "✓ parse_notifiers_input() handles list/string",
         "✓ get_ha_users() filters system users",
@@ -294,22 +294,22 @@ IMPLEMENTATION_CHECKLIST = {
     ],
 }
 
-# Entity ID Examples (for user_id starting with a1b2c3d4...)
+# Entity ID Examples (for user name Anna)
 ENTITY_EXAMPLES = {
     "switches": [
-        "switch.onboard_manager_onboard_a1b2c3d4",
-        "switch.onboard_manager_notify_a1b2c3d4",
+        "switch.onboard_manager_onboard_anna",
+        "switch.onboard_manager_notify_anna",
     ],
     "selects": [
-        "select.onboard_manager_role_a1b2c3d4",
+        "select.onboard_manager_role_anna",
     ],
     "sensors": [
-        "sensor.onboard_manager_notifiers_a1b2c3d4",
+        "sensor.onboard_manager_notifiers_anna",
         "sensor.onboard_manager_active_notifiers_all",
         "sensor.onboard_manager_active_notifiers_role_crew",
     ],
     "notify": [
-        "notify.onboard_manager_user_a1b2c3d4",
+        "notify.onboard_manager_user_anna",
         "notify.onboard_manager_all",
         "notify.onboard_manager_role_crew",
     ],

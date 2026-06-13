@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import re
 from typing import Any
 
 import voluptuous as vol
@@ -13,6 +12,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
+from .user_registry import slugify_identifier
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,10 +27,7 @@ def parse_roles(roles_input: str) -> list[dict[str, str]]:
         if not role_label:
             continue
 
-        # Create slug: lowercase, replace spaces/hyphens with underscore, remove non-alphanum
-        slug = role_label.lower()
-        slug = re.sub(r"[\s\-]+", "_", slug)
-        slug = re.sub(r"[^a-z0-9_]", "", slug)
+        slug = slugify_identifier(role_label)
 
         # Ensure unique slug
         original_slug = slug
@@ -54,7 +51,7 @@ def roles_to_string(roles: list[dict[str, str]]) -> str:
 class OnboardManagerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Onboard Manager."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

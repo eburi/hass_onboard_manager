@@ -13,7 +13,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, ENTITY_PREFIX
 from .coordinator import OnboardManagerCoordinator
-from .user_registry import get_short_id
+from .user_registry import get_user_entity_slug
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,11 +80,11 @@ class OnboardSwitch(CoordinatorEntity, SwitchEntity):
         self.user_id = user_id
         self._attr_has_entity_name = False
 
-        short_id = get_short_id(user_id)
         self._attr_unique_id = f"{config_entry.entry_id}_{user_id}_onboard"
 
-        # Set entity_id suggestion
-        self.entity_id = f"switch.{ENTITY_PREFIX}_onboard_{short_id}"
+        user_data = self.coordinator.data["users"].get(self.user_id, {})
+        user_slug = get_user_entity_slug({**user_data, "user_id": self.user_id})
+        self.entity_id = f"switch.{ENTITY_PREFIX}_onboard_{user_slug}"
 
         self._update_attrs()
 
@@ -132,11 +132,11 @@ class NotifySwitch(CoordinatorEntity, SwitchEntity):
         self.user_id = user_id
         self._attr_has_entity_name = False
 
-        short_id = get_short_id(user_id)
         self._attr_unique_id = f"{config_entry.entry_id}_{user_id}_notify"
 
-        # Set entity_id suggestion
-        self.entity_id = f"switch.{ENTITY_PREFIX}_notify_{short_id}"
+        user_data = self.coordinator.data["users"].get(self.user_id, {})
+        user_slug = get_user_entity_slug({**user_data, "user_id": self.user_id})
+        self.entity_id = f"switch.{ENTITY_PREFIX}_notify_{user_slug}"
 
         self._update_attrs()
 

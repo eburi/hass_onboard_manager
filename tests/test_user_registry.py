@@ -14,8 +14,10 @@ from custom_components.onboard_manager.user_registry import (
     compute_active_notifiers,
     compute_active_notifiers_by_role,
     get_short_id,
+    get_user_entity_slug,
     normalize_notifier,
     parse_notifiers_input,
+    slugify_identifier,
     sync_users,
 )
 
@@ -24,6 +26,18 @@ def test_get_short_id() -> None:
     """Test short ID extraction."""
     assert get_short_id("abcdefghijklmnop") == "abcdefgh"
     assert get_short_id("12345678") == "12345678"
+
+
+def test_slugify_identifier() -> None:
+    """Test slugifying human-readable names."""
+    assert slugify_identifier("Erich Buri Onboard") == "erich_buri_onboard"
+    assert slugify_identifier("  Crew / Passenger  ") == "crew_passenger"
+
+
+def test_get_user_entity_slug() -> None:
+    """Test readable entity slugs for users."""
+    assert get_user_entity_slug({"name": "Erich Buri"}) == "erich_buri"
+    assert get_user_entity_slug({"user_id": "1234567890abcdef"}) == "user_12345678"
 
 
 def test_normalize_notifier() -> None:

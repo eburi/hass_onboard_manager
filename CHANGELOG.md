@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-06-13
+
+### Changed
+- Migrate existing per-user entities from short-id entity ids to readable username-based ids.
+- Add a config entry migration that renames entity registry entries once on upgrade.
+- Document that YAML references, dashboards, and automations must be updated after the rename.
+
+## [Unreleased]
+
 ## [1.1.3] - 2026-05-26
 
 ### Changed

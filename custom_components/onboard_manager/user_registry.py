@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
 
 from homeassistant.auth.models import User
@@ -22,6 +23,26 @@ MOBILE_APP_DATA_NOTIFY = "notify"
 def get_short_id(user_id: str) -> str:
     """Get a short identifier from user_id (first 8 chars)."""
     return user_id[:8]
+
+
+def slugify_identifier(value: str) -> str:
+    """Convert a human-readable value to a Home Assistant-friendly slug."""
+    slug = re.sub(r"[^a-z0-9]+", "_", value.strip().lower())
+    return slug.strip("_")
+
+
+def get_user_entity_slug(user_data: dict[str, Any]) -> str:
+    """Return a readable slug for a user's entity ids."""
+    name = str(user_data.get("name", "")).strip()
+    slug = slugify_identifier(name)
+    if slug:
+        return slug
+
+    user_id = str(user_data.get("user_id", "")).strip()
+    if user_id:
+        return f"user_{get_short_id(user_id)}"
+
+    return "user"
 
 
 def normalize_notifier(notifier: str) -> str:

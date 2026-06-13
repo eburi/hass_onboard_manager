@@ -45,11 +45,11 @@ The hass-onboard-manager Home Assistant integration has been fully implemented a
 - Clean removal of deleted users
 
 ### 2. Per-User Entities
-For each user (using 8-char short ID):
-- `switch.onboard_manager_onboard_<shortid>` - Onboard status
-- `switch.onboard_manager_notify_<shortid>` - Notification enabled
-- `select.onboard_manager_role_<shortid>` - Role selector
-- `sensor.onboard_manager_notifiers_<shortid>` - Configured notifiers
+For each user (using a slugified username):
+- `switch.onboard_manager_onboard_<username_slug>` - Onboard status
+- `switch.onboard_manager_notify_<username_slug>` - Notification enabled
+- `select.onboard_manager_role_<username_slug>` - Role selector
+- `sensor.onboard_manager_notifiers_<username_slug>` - Configured notifiers
 
 ### 3. Aggregate Sensors
 - `sensor.onboard_manager_active_notifiers_all` - All active notifiers
@@ -57,7 +57,7 @@ For each user (using 8-char short ID):
 - JSON list format for Alert2 compatibility
 
 ### 4. Notification Groups
-- `notify.onboard_manager_user_<shortid>` - Send to specific user
+- `notify.onboard_manager_user_<username_slug>` - Send to specific user
 - `notify.onboard_manager_all` - Send to all active users
 - `notify.onboard_manager_role_<role>` - Send to role members
 - Automatic deduplication
@@ -228,9 +228,9 @@ hacs.json                    (5 lines)   - HACS config
 ## Design Decisions
 
 ### Entity ID Strategy
-- Use short user ID (first 8 chars) for stability
-- Don't force entity_id, use unique_id
-- Let HA assign final entity_id
+- Use slugified user names for readable entity IDs
+- Keep unique IDs based on Home Assistant user ids
+- Let HA assign the final entity_id suggestion
 
 ### Active User Concept
 - Onboard + Notify = Active

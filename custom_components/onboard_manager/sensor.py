@@ -13,7 +13,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, ENTITY_PREFIX
 from .coordinator import OnboardManagerCoordinator
-from .user_registry import get_short_id
+from .user_registry import get_user_entity_slug
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,12 +108,12 @@ class OnboardUserNotifiersSensor(CoordinatorEntity, SensorEntity):
         self.user_id = user_id
         self._attr_has_entity_name = False
 
-        short_id = get_short_id(user_id)
         self._attr_unique_id = f"{config_entry.entry_id}_{user_id}_notifiers"
         self._attr_name = None  # Will be set in _update_attrs
 
-        # Set entity_id suggestion
-        self.entity_id = f"sensor.{ENTITY_PREFIX}_notifiers_{short_id}"
+        user_data = self.coordinator.data["users"].get(self.user_id, {})
+        user_slug = get_user_entity_slug({**user_data, "user_id": self.user_id})
+        self.entity_id = f"sensor.{ENTITY_PREFIX}_notifiers_{user_slug}"
 
         self._update_attrs()
 

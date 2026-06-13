@@ -73,10 +73,14 @@ To edit roles after setup:
 
 For each Home Assistant user, the following entities are created:
 
-- `switch.onboard_manager_onboard_<shortid>` - Controls if user is onboard
-- `switch.onboard_manager_notify_<shortid>` - Controls if user receives notifications
-- `select.onboard_manager_role_<shortid>` - Select user's role
-- `sensor.onboard_manager_notifiers_<shortid>` - Lists user's configured notifiers
+- `switch.onboard_manager_onboard_<username_slug>` - Controls if user is onboard
+- `switch.onboard_manager_notify_<username_slug>` - Controls if user receives notifications
+- `select.onboard_manager_role_<username_slug>` - Select user's role
+- `sensor.onboard_manager_notifiers_<username_slug>` - Lists user's configured notifiers
+
+Existing installs are migrated once to these readable ids. That rename is
+intentional and breaking for YAML references, dashboards, and automations that
+point at the old short-id entity ids.
 
 ### Aggregate Sensors
 
@@ -85,7 +89,7 @@ For each Home Assistant user, the following entities are created:
 
 ### Notification Groups
 
-- `notify.onboard_manager_user_<shortid>` - Send to specific user's notifiers
+- `notify.onboard_manager_user_<username_slug>` - Send to specific user's notifiers
 - `notify.onboard_manager_all` - Send to all active users
 - `notify.onboard_manager_role_<role>` - Send to all active users in a role
 
@@ -237,7 +241,7 @@ automation:
       - platform: time
         at: "08:00:00"
     action:
-      - service: notify.onboard_manager_user_a1b2c3d4
+      - service: notify.onboard_manager_user_anna
         data:
           message: "Good morning!"
 ```
@@ -309,9 +313,9 @@ Create a dashboard to manage who is onboard:
 type: entities
 title: Onboard Roster
 entities:
-  - entity: switch.onboard_manager_onboard_a1b2c3d4
-  - entity: switch.onboard_manager_onboard_b2c3d4e5
-  - entity: switch.onboard_manager_onboard_c3d4e5f6
+  - entity: switch.onboard_manager_onboard_anna
+  - entity: switch.onboard_manager_onboard_bob
+  - entity: switch.onboard_manager_onboard_charlie
 ```
 
 ## Data Model
